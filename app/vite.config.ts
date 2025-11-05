@@ -10,9 +10,15 @@ export default defineConfig({
   resolve: {
     alias: {
       buffer: 'buffer',
+      process: 'process',
     },
   },
   optimizeDeps: {
-    include: ['buffer'],
+    include: ['buffer', 'process'],
+  },
+  build: {
+    rollupOptions: {
+      plugins: [],
+    },
   },
 })
