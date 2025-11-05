@@ -1,9 +1,3 @@
-import { Buffer } from 'buffer'
-;(globalThis as any).Buffer = Buffer
-
-import process from 'process'
-;(globalThis as any).process = process
-
 import React, { useMemo } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react'
