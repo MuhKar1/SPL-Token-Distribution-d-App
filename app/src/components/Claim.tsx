@@ -303,6 +303,8 @@ export const Claim = () => {
 
       // Success handling
       setSuccess(`✓ Success! Tx: ${signature.slice(0, 8)}...`)
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000)
       await refreshData(false)  // Refresh data without spinner
     } catch (e: any) {
       console.error('Claim failed:', e)
