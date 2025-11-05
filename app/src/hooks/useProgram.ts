@@ -13,7 +13,7 @@
 import { useMemo } from 'react'
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react'
 import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor'
-import type { Token } from '../../../target/types/token'
+import type { Token } from '../types/token'
 import idl from '../idl/token.json'
 
 // Build Anchor-compatible IDL from the generated IDL JSON
