@@ -13,16 +13,12 @@
 import { useMemo } from 'react'
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react'
 import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor'
-import type { Idl } from '@coral-xyz/anchor'
+import type { Token } from '../../../target/types/token'
 import idl from '../idl/token.json'
 
 // Build Anchor-compatible IDL from the generated IDL JSON
 // The IDL contains all program instructions, accounts, and types
-const anchorIdl = {
-  ...idl,
-  version: idl.metadata?.version ?? '0.1.0',  // Program version
-  name: idl.metadata?.name ?? 'token'          // Program name
-} as unknown as Idl
+const anchorIdl = idl as Token
 
 // Program ID from the deployed contract address
 const programID = new web3.PublicKey(idl.address)
@@ -60,7 +56,7 @@ export const useProgram = () => {
    */
   const program = useMemo(() => {
     if (!provider) return null
-    return new Program(anchorIdl, provider)
+    return new Program(anchorIdl, provider) as any
   }, [provider])
 
   return { program, provider, programID }
