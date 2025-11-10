@@ -39,6 +39,7 @@ import './Claim.css'
  * Contains all the configuration and status information from the blockchain
  */
 type ProgramState = {
+  admin: web3.PublicKey       // Program administrator public key
   claimAmount: BN              // Number of tokens per claim
   claimCooldownSeconds: number // Cooldown period between claims
   isPaused: boolean           // Whether claiming is currently paused
@@ -135,6 +136,7 @@ export const Claim = () => {
 
       // Store program state with proper typing
       setProgramState({
+        admin: stateAccount.admin,
         claimAmount: stateAccount.claimAmount as BN,
         claimCooldownSeconds: Number(stateAccount.claimCooldownSeconds),
         isPaused: stateAccount.isPaused,
@@ -354,16 +356,42 @@ export const Claim = () => {
     )
   }
 
-  // Show registration prompt if user is not whitelisted
+  // Show comprehensive registration guidance if user is not whitelisted
   if (!claimerState) {
     return (
       <div className="claim-container">
-        <div className="claim-card">
-          <h2>Not Registered</h2>
-          <p>You are not registered as a claimer</p>
-          <button onClick={() => refreshData()} disabled={refreshing}>
-            {refreshing ? 'Checking...' : 'Check Again'}
-          </button>
+        <div className="registration-info">
+          <h2>📝 Registration Required</h2>
+          <p>
+            You are not currently registered as a claimer for this token distribution program.
+          </p>
+          <div className="registration-steps">
+            <h3>How to Get Registered:</h3>
+            <ol>
+              <li>Contact the program administrator to request claimer access</li>
+              <li>Provide your wallet address for whitelisting</li>
+              <li>Once added, you'll be able to claim tokens</li>
+            </ol>
+          </div>
+          
+          <div className="contact-highlight">
+            <h4>🚀 Ready to Test the Smart Contract?</h4>
+            <p><strong>Contact the Developer:</strong></p>
+            <p className="email-contact">📧 muhorowakariuki@gmail.com</p>
+            <p className="contact-note">Send your Solana wallet address to be added as a test claimer and experience the full functionality!</p>
+          </div>
+          
+          <div className="contact-info">
+            <h4>Additional Contact Options:</h4>
+            <p><strong>GitHub:</strong> <a href="https://github.com/MuhKar1/SPL-Token-Distribution-d-App" target="_blank" rel="noopener noreferrer">Open an Issue</a></p>
+            <p><strong>Note:</strong> This is a demonstration project. Contact the repository owner to be added as a test claimer.</p>
+          </div>
+          <div className="refresh-notice">
+            <p>After registration, refresh this page to check your status.</p>
+            <button onClick={() => refreshData()} disabled={refreshing} className="refresh-btn">
+              {refreshing ? '🔄 Checking...' : '🔄 Check Status'}
+            </button>
+          </div>
         </div>
       </div>
     )

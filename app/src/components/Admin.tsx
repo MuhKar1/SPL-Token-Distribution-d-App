@@ -186,6 +186,12 @@ export const Admin = () => {
       return
     }
 
+    // Check if claimers list is still loading
+    if (loadingClaimers) {
+      setError('Please wait for claimers list to load')
+      return
+    }
+
     try {
       setProcessing(true)
       setError(null)
@@ -193,6 +199,26 @@ export const Admin = () => {
 
       // Parse and validate the user address
       const userPubkey = new PublicKey(newClaimerAddress)
+
+      // Check if the wallet is already a claimer
+      const isAlreadyClaimer = claimers.some(claimer =>
+        claimer.user.toString() === userPubkey.toString()
+      )
+
+      console.log('Checking for duplicate claimer:', {
+        inputAddress: newClaimerAddress,
+        userPubkey: userPubkey.toString(),
+        claimersCount: claimers.length,
+        claimersList: claimers.map(c => c.user.toString()),
+        isAlreadyClaimer
+      })
+
+      if (isAlreadyClaimer) {
+        console.log('Duplicate claimer detected, showing error')
+        setError('This wallet is already a registered claimer')
+        setProcessing(false)
+        return
+      }
 
       // Derive PDAs for the transaction
       const [statePda] = getStatePDA(programID)
@@ -232,7 +258,57 @@ export const Admin = () => {
   }
 
   /**
-   * Remove a user from the claimer whitelist
+   * Remove a user from the claimer whitelist (inline version)
+   * Closes their claimer state account and refunds the rent
+   */
+  const handleRemoveClaimerInline = async (userAddress: string) => {
+    if (!program || !wallet.publicKey || !programState) return
+
+    if (!isValidPublicKey(userAddress)) {
+      setError('Invalid Solana address')
+      return
+    }
+
+    try {
+      setProcessing(true)
+      setError(null)
+      setSuccess(null)
+
+      const userPubkey = new PublicKey(userAddress)
+      const [statePda] = getStatePDA(programID)
+      const [claimerPda] = web3.PublicKey.findProgramAddressSync(
+        [Buffer.from('claimer'), userPubkey.toBuffer()],
+        programID
+      )
+
+      const tx = await program.methods
+        .removeClaimer()
+        .accounts({
+          state: statePda,
+          admin: wallet.publicKey,
+          user: userPubkey,
+          claimerState: claimerPda,
+        })
+        .rpc()
+
+      await connection.confirmTransaction(tx, 'confirmed')
+      setSuccess(`Claimer removed successfully! TX: ${tx.slice(0, 8)}...`)
+      setRemoveClaimerAddress('')
+
+      // Refresh claimer list to reflect the removal
+      await fetchClaimers()
+
+      setTimeout(() => setSuccess(null), 5000)
+    } catch (err: any) {
+      console.error('Error removing claimer:', err)
+      setError(`Failed to remove claimer: ${err.message}`)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  /**
+   * Remove a user from the claimer whitelist (manual input version)
    * Closes their claimer state account and refunds the rent
    */
   const handleRemoveClaimer = async () => {
@@ -500,7 +576,6 @@ export const Admin = () => {
         </div>
 
         {/* Error and success message displays */}
-        {error && <div className="alert error">{error}</div>}
         {success && <div className="alert success">{success}</div>}
 
         {/* Program Status Section - Shows real-time program statistics */}
@@ -601,6 +676,7 @@ export const Admin = () => {
         {/* Add Claimer Section - Whitelist new users */}
         <div className="section">
           <h3>Add Claimer</h3>
+          {error && <div className="alert error" style={{marginBottom: '1rem'}}>{error}</div>}
           <div className="form-group">
             <label>Wallet Address</label>
             <input
@@ -686,7 +762,7 @@ export const Admin = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => setRemoveClaimerAddress(claimer.user.toBase58())}
+                    onClick={() => handleRemoveClaimerInline(claimer.user.toBase58())}
                     className="btn-remove-inline"
                     disabled={processing}
                   >
